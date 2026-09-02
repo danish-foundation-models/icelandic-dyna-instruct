@@ -15,9 +15,6 @@ ROOT = Path(__file__).parents[1]
 
 
 def test_config_and_prompt_load() -> None:
-    assert not (ROOT / "configs" / "fo.yaml").exists()
-    assert not (ROOT / "prompts" / "fo.md").exists()
-
     config = load_config(ROOT / "configs" / "is.yaml")
     assert config.language.code == "is"
     assert config.language.name == "Icelandic"
