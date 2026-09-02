@@ -1,10 +1,14 @@
+import asyncio
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pyarrow.parquet as pq
 from datasets import load_dataset
 
 from reverse_instruct.config import load_config
 from reverse_instruct.data import make_passage, source_limits
+from reverse_instruct.inference import InferenceClient
 from reverse_instruct.models import AcceptedRecord, Candidate, GenerationDecision, Message
 from reverse_instruct.prompting import PromptTemplate
 from reverse_instruct.runner import flush_full_shards
@@ -16,6 +20,9 @@ ROOT = Path(__file__).parents[1]
 
 def test_config_and_prompt_load() -> None:
     config = load_config(ROOT / "configs" / "is.yaml")
+    assert config.model.temperature == 1.0
+    assert config.model.top_p == 0.95
+    assert config.model.top_k == 64
     assert config.language.code == "is"
     assert config.language.name == "Icelandic"
     assert config.dataset.name == "danish-foundation-models/icelandic-dynaword"
@@ -32,6 +39,38 @@ def test_config_and_prompt_load() -> None:
     assert "íslensk þjálfunargögn" in rendered
     assert "A complete example passage." in rendered
     assert "$passage" not in rendered
+
+
+def test_google_sampling_parameters_are_sent() -> None:
+    config = load_config(ROOT / "configs" / "is.yaml").model
+    create = AsyncMock(
+        return_value=SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=(
+                            '{"accept":false,"domain":null,"instruction":null,'
+                            '"reason":"Not suitable."}'
+                        )
+                    )
+                )
+            ]
+        )
+    )
+
+    async def generate() -> None:
+        client = InferenceClient(config)
+        client.client.chat.completions.create = create
+        try:
+            await client.generate("Create an instruction.")
+        finally:
+            await client.close()
+
+    asyncio.run(generate())
+    request = create.await_args.kwargs
+    assert request["temperature"] == 1.0
+    assert request["top_p"] == 0.95
+    assert request["extra_body"] == {"top_k": 64}
 
 
 def test_make_passage_filters_and_truncates() -> None:

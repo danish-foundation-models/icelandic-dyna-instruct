@@ -33,6 +33,8 @@ class ModelConfig(BaseModel):
     base_url: str
     api_key_env: str
     temperature: float = Field(ge=0)
+    top_p: float = Field(gt=0, le=1)
+    top_k: int = Field(gt=0)
     max_tokens: int = Field(gt=0)
     concurrency: int = Field(gt=0)
     timeout_seconds: float = Field(gt=0)

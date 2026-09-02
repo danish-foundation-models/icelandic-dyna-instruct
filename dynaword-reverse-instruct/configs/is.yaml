@@ -62,7 +62,9 @@ model:
   name: google/gemma-4-31B-it
   base_url: http://127.0.0.1:8000/v1
   api_key_env: OPENAI_API_KEY
-  temperature: 0.7
+  temperature: 1.0
+  top_p: 0.95
+  top_k: 64
   max_tokens: 1024
   concurrency: 32
   timeout_seconds: 120

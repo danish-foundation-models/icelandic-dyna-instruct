@@ -15,6 +15,8 @@ uv run pytest
 
 Install vLLM separately in the GPU environment. The configured model is `google/gemma-4-31B-it`.
 
+Sampling follows [Google's Gemma 4 recommendation](https://ai.google.dev/gemma/docs/core/model_card_4): `temperature=1.0`, `top_p=0.95`, and `top_k=64`. This uses sampling rather than greedy decoding.
+
 ## Run
 
 Start the inference server:

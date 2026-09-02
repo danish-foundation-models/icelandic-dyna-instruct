@@ -24,7 +24,9 @@ class InferenceClient:
             model=self.config.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.config.temperature,
+            top_p=self.config.top_p,
             max_tokens=self.config.max_tokens,
+            extra_body={"top_k": self.config.top_k},
             response_format={
                 "type": "json_schema",
                 "json_schema": {
