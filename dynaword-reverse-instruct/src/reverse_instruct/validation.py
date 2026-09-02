@@ -6,8 +6,6 @@ META_REFERENCES = (
     "text above",
     "passage above",
     "provided text",
-    "teksturin omanfyri",
-    "brotið omanfyri",
     "tekstinn hér að ofan",
     "ofangreindur texti",
 )

@@ -14,20 +14,27 @@ from reverse_instruct.validation import validation_errors
 ROOT = Path(__file__).parents[1]
 
 
-def test_configs_and_prompts_load() -> None:
-    for language in ("fo", "is"):
-        config = load_config(ROOT / "configs" / f"{language}.yaml")
-        candidate = Candidate(
-            id="example_1",
-            source="example",
-            language=language,
-            domain_hint="encyclopedic",
-            source_context="Reference text.",
-            passage="A complete example passage.",
-        )
-        rendered = PromptTemplate(config.prompt_path).render(candidate)
-        assert "A complete example passage." in rendered
-        assert "$passage" not in rendered
+def test_config_and_prompt_load() -> None:
+    assert not (ROOT / "configs" / "fo.yaml").exists()
+    assert not (ROOT / "prompts" / "fo.md").exists()
+
+    config = load_config(ROOT / "configs" / "is.yaml")
+    assert config.language.code == "is"
+    assert config.language.name == "Icelandic"
+    assert config.dataset.name == "danish-foundation-models/icelandic-dynaword"
+
+    candidate = Candidate(
+        id="example_1",
+        source="example",
+        language="is",
+        domain_hint="encyclopedic",
+        source_context="Reference text.",
+        passage="A complete example passage.",
+    )
+    rendered = PromptTemplate(config.prompt_path).render(candidate)
+    assert "íslensk þjálfunargögn" in rendered
+    assert "A complete example passage." in rendered
+    assert "$passage" not in rendered
 
 
 def test_make_passage_filters_and_truncates() -> None:
@@ -42,7 +49,14 @@ def test_make_passage_filters_and_truncates() -> None:
 def test_limit_is_distributed_across_sources() -> None:
     config = load_config(ROOT / "configs" / "is.yaml")
     limits = source_limits(config, total_limit=12)
-    assert set(limits.values()) == {2}
+    assert limits == {
+        "wikipedia": 2,
+        "igc-social-blogs": 2,
+        "igc-adjud": 2,
+        "igc-law": 2,
+        "wikibooks": 2,
+        "wikisource": 2,
+    }
 
 
 def test_validation_accepts_valid_instruction() -> None:
@@ -56,11 +70,11 @@ def test_validation_accepts_valid_instruction() -> None:
     assert errors == []
 
 
-def test_validation_rejects_meta_reference() -> None:
+def test_validation_rejects_icelandic_meta_reference() -> None:
     decision = GenerationDecision(
         accept=True,
         domain="encyclopedic",
-        instruction="Summarize the provided text in a clear and neutral style.",
+        instruction="Ofangreindur texti á að vera dreginn saman á skýran hátt.",
         reason="Complete passage.",
     )
     errors = validation_errors(decision, {"encyclopedic"}, set())
@@ -104,7 +118,7 @@ def test_accepted_dataset_has_three_parquet_columns(tmp_path: Path) -> None:
         "content": "Explain the subject.",
     }
 
-    config = load_config(ROOT / "configs" / "fo.yaml").model_copy(update={"output_dir": tmp_path})
+    config = load_config(ROOT / "configs" / "is.yaml").model_copy(update={"output_dir": tmp_path})
     processed_ids, seen_instructions, next_index = prepare_output(config, resume=True)
     assert processed_ids == {"wiki_123"}
     assert seen_instructions == {"explain the subject."}
@@ -121,7 +135,7 @@ def test_full_shards_contain_the_configured_number_of_rows(tmp_path: Path) -> No
         model="google/gemma-4-31B-it",
     )
     accepted = [record, record, record]
-    config = load_config(ROOT / "configs" / "fo.yaml").model_copy(
+    config = load_config(ROOT / "configs" / "is.yaml").model_copy(
         update={"output_dir": tmp_path, "rows_per_shard": 2}
     )
 
