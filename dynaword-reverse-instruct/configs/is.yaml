@@ -1,0 +1,76 @@
+run_name: is-pilot
+seed: 42
+prompt_path: ../prompts/is.md
+output_dir: ../outputs/is-pilot
+rows_per_shard: 1000
+hub_repo: V4ldeLund/Icelandic-Instruct
+
+language:
+  code: is
+  name: Icelandic
+  allowed_domains:
+    - encyclopedic
+    - judicial
+    - legislation
+    - parliamentary
+    - opinion
+    - instructional
+    - literary
+
+dataset:
+  name: danish-foundation-models/icelandic-dynaword
+  revision: 09165880e04277dc4b8113a8901a75916ba69cf4
+  split: train
+  shuffle_buffer: 10000
+
+sources:
+  wikipedia:
+    max_documents: 3000
+    domain_hint: encyclopedic
+    context: Íslenskar Wikipedia-greinar og uppflettiefni.
+
+  igc-social-blogs:
+    max_documents: 2000
+    domain_hint: opinion
+    context: Samfelldir íslenskir bloggpistlar og skoðanatextar.
+
+  igc-adjud:
+    max_documents: 2000
+    domain_hint: judicial
+    context: Íslenskir dómar og röksemdafærsla dómstóla.
+
+  igc-law:
+    max_documents: 1500
+    domain_hint: legislation
+    context: Íslensk lög, frumvörp og lagatillögur.
+
+  wikibooks:
+    max_documents: 1000
+    domain_hint: instructional
+    context: Íslenskt kennslu- og leiðbeiningarefni.
+
+  wikisource:
+    max_documents: 500
+    domain_hint: literary
+    context: Sögulegir íslenskir textar og bókmenntir.
+
+text:
+  min_chars: 400
+  max_chars: 2500
+
+model:
+  name: google/gemma-4-31B-it
+  base_url: http://127.0.0.1:8000/v1
+  api_key_env: OPENAI_API_KEY
+  temperature: 0.7
+  max_tokens: 1024
+  concurrency: 32
+  timeout_seconds: 120
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  max_model_len: 8192
+  dtype: bfloat16

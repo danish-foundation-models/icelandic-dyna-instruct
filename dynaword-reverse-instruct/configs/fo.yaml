@@ -1,0 +1,54 @@
+run_name: fo-pilot
+seed: 42
+prompt_path: ../prompts/fo.md
+output_dir: ../outputs/fo-pilot
+rows_per_shard: 1000
+hub_repo: V4ldeLund/Faroese-Instruct
+
+language:
+  code: fo
+  name: Faroese
+  allowed_domains:
+    - encyclopedic
+    - news_report
+    - public_guidance
+    - opinion
+    - instructional
+
+dataset:
+  name: danish-foundation-models/faroese-dynaword
+  revision: 3d7d2c320fd842ae5fce243a6786e7b3fdae873c
+  split: train
+  shuffle_buffer: 10000
+
+sources:
+  wikipedia:
+    max_documents: 3000
+    domain_hint: encyclopedic
+    context: Føroyskar Wikipedia-greinar og uppslagsverkstilfar.
+
+  faroese-blark-small:
+    max_documents: 7000
+    domain_hint: auto
+    context: Blandaður føroyskur vevtekstur, millum annað tíðindi, almenn kunning, hagtøl og bloggtekstir.
+
+text:
+  min_chars: 300
+  max_chars: 2500
+
+model:
+  name: google/gemma-4-31B-it
+  base_url: http://127.0.0.1:8000/v1
+  api_key_env: OPENAI_API_KEY
+  temperature: 0.7
+  max_tokens: 1024
+  concurrency: 32
+  timeout_seconds: 120
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  max_model_len: 8192
+  dtype: bfloat16
